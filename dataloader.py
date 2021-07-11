@@ -66,3 +66,38 @@ class Loader(Dataset):
         row = row.to_numpy()[0, 1:].astype(np.int)
 
         return image, (row[0], row[1], row[2])
+
+
+class test_loader(Dataset):
+    def __init__(self, path):
+        self.image_path = os.path.join(path, "images")
+
+        # get a list of image names
+        self.image_name = os.listdir(self.image_path)
+
+        # remove this file which is created in windows
+        self.image_name.remove("Thumbs.db")
+
+        random.shuffle(self.image_name)
+
+        self.image_name = self.image_name[:500]
+        self.trans = transforms.Compose([transforms.ToTensor(),
+                                         transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                              std=[0.229, 0.224, 0.225])])
+
+    def __len__(self):
+        return len(self.image_name)
+
+    def __getitem__(self, x):
+        input_name = self.image_name[x]
+        input_location = os.path.join(self.image_path, input_name)
+
+        # read the image
+        image = cv2.imread(input_location)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = (image/255.0).astype(np.float32)
+
+        # apply transformations
+        image = self.trans(image)
+
+        return image, input_name
